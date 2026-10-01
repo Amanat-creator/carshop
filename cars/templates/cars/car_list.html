@@ -1,0 +1,151 @@
+{% extends 'cars/base.html' %}
+
+{% block content %}
+<h1 style="margin-bottom: 24px;">Каталог автомобилей</h1>
+
+<!-- Поиск и фильтры -->
+<form method="get" style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 12px; align-items: end; margin-bottom: 12px;">
+        <div>
+            <label style="display: block; font-size: 13px; color: #666; margin-bottom: 6px;">Поиск</label>
+            <input type="text" name="q" value="{{ query }}" placeholder="Марка или модель..."
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+        </div>
+        <div>
+            <label style="display: block; font-size: 13px; color: #666; margin-bottom: 6px;">Марка</label>
+            <select name="brand" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+                <option value="">Все</option>
+                {% for b in brands %}
+                    <option value="{{ b }}" {% if current_brand == b %}selected{% endif %}>{{ b }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label style="display: block; font-size: 13px; color: #666; margin-bottom: 6px;">КПП</label>
+            <select name="transmission" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+                <option value="">Любая</option>
+                <option value="auto" {% if current_transmission == 'auto' %}selected{% endif %}>Автомат</option>
+                <option value="manual" {% if current_transmission == 'manual' %}selected{% endif %}>Механика</option>
+                <option value="robot" {% if current_transmission == 'robot' %}selected{% endif %}>Робот</option>
+                <option value="variator" {% if current_transmission == 'variator' %}selected{% endif %}>Вариатор</option>
+            </select>
+        </div>
+        <div>
+            <label style="display: block; font-size: 13px; color: #666; margin-bottom: 6px;">Топливо</label>
+            <select name="fuel" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+                <option value="">Любое</option>
+                <option value="petrol" {% if current_fuel == 'petrol' %}selected{% endif %}>Бензин</option>
+                <option value="diesel" {% if current_fuel == 'diesel' %}selected{% endif %}>Дизель</option>
+                <option value="hybrid" {% if current_fuel == 'hybrid' %}selected{% endif %}>Гибрид</option>
+                <option value="electric" {% if current_fuel == 'electric' %}selected{% endif %}>Электро</option>
+            </select>
+        </div>
+        <div>
+            <label style="display: block; font-size: 13px; color: #666; margin-bottom: 6px;">Сортировка</label>
+            <select name="sort" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+                <option value="">Новые</option>
+                <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>Цена ↑</option>
+                <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>Цена ↓</option>
+                <option value="year_desc" {% if current_sort == 'year_desc' %}selected{% endif %}>Год ↓</option>
+                <option value="year_asc" {% if current_sort == 'year_asc' %}selected{% endif %}>Год ↑</option>
+                <option value="mileage" {% if current_sort == 'mileage' %}selected{% endif %}>Пробег</option>
+                <option value="popular" {% if current_sort == 'popular' %}selected{% endif %}>Популярные</option>
+            </select>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 12px; align-items: end;">
+        <div>
+            <label style="display: block; font-size: 13px; color: #666; margin-bottom: 6px;">Цена от</label>
+            <input type="number" name="price_min" value="{{ price_min }}" placeholder="0"
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+        </div>
+        <div>
+            <label style="display: block; font-size: 13px; color: #666; margin-bottom: 6px;">Цена до</label>
+            <input type="number" name="price_max" value="{{ price_max }}" placeholder="99999999"
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+        </div>
+        <a href="{% url 'cars:car_list' %}" style="padding: 10px 20px; background: #e5e7eb; color: #333; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
+            Сброс
+        </a>
+        <button type="submit" style="padding: 10px 24px; background: #2a5298; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;">
+            Найти
+        </button>
+    </div>
+</form>
+
+<!-- Сетка машин -->
+{% if page_obj %}
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;">
+    {% for car in page_obj %}
+    <div style="background: white; border-radius: 12px; overflow: hidden; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.2s, box-shadow 0.2s;"
+         onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.15)';"
+         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
+
+        <!-- Кнопки избранного и сравнения -->
+        <div style="position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; gap: 6px;">
+            {% if car.pk in favorites %}
+                <a href="{% url 'cars:remove_favorite' car.pk %}" title="Убрать из избранного"
+                   style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: white; border-radius: 50%; text-decoration: none; font-size: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">❤️</a>
+            {% else %}
+                <a href="{% url 'cars:add_favorite' car.pk %}" title="В избранное"
+                   style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: white; border-radius: 50%; text-decoration: none; font-size: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">🤍</a>
+            {% endif %}
+
+            {% if car.pk in compare %}
+                <a href="{% url 'cars:add_compare' car.pk %}" title="Убрать из сравнения"
+                   style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: #ffc107; border-radius: 50%; text-decoration: none; font-size: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">⚖️</a>
+            {% else %}
+                <a href="{% url 'cars:add_compare' car.pk %}" title="В сравнение"
+                   style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: white; border-radius: 50%; text-decoration: none; font-size: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">⚖️</a>
+            {% endif %}
+        </div>
+
+        <a href="{% url 'cars:car_detail' car.slug %}" style="text-decoration: none; color: inherit;">
+            {% if car.image %}
+                <img src="{{ car.image.url }}" alt="{{ car }}" style="width: 100%; height: 200px; object-fit: cover;">
+            {% else %}
+                <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #e0e7ff, #c7d2fe); display: flex; align-items: center; justify-content: center; color: #6366f1; font-size: 48px;">🚗</div>
+            {% endif %}
+            <div style="padding: 16px;">
+                <h3 style="font-size: 18px; margin-bottom: 8px;">{{ car.brand }} {{ car.model }}</h3>
+                <div style="color: #666; font-size: 13px; margin-bottom: 12px;">
+                    {{ car.year }} г. • {{ car.mileage }} км • {{ car.get_transmission_display }}
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 22px; font-weight: 700; color: #2a5298;">
+                        {{ car.price|floatformat:0 }} ₽
+                    </div>
+                    <div style="font-size: 12px; color: #999;">👁 {{ car.views_count }}</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Пагинация -->
+{% if page_obj.has_other_pages %}
+<div style="text-align: center; margin-top: 40px;">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if current_brand %}&brand={{ current_brand }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}"
+           style="display: inline-block; padding: 8px 16px; background: white; border-radius: 8px; text-decoration: none; color: #2a5298; margin: 0 4px;">← Назад</a>
+    {% endif %}
+
+    <span style="padding: 8px 16px;">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if current_brand %}&brand={{ current_brand }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}"
+           style="display: inline-block; padding: 8px 16px; background: white; border-radius: 8px; text-decoration: none; color: #2a5298; margin: 0 4px;">Вперёд →</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div style="text-align: center; padding: 80px 20px; background: white; border-radius: 12px;">
+    <div style="font-size: 64px; margin-bottom: 16px;">🔍</div>
+    <h2 style="color: #666;">Ничего не найдено</h2>
+    <p style="color: #999; margin-top: 8px;">Попробуйте изменить параметры поиска</p>
+</div>
+{% endif %}
+{% endblock %}

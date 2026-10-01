@@ -1,0 +1,40 @@
+{% extends 'cars/base.html' %}
+
+{% block title %}Вход — АвтоКаталог{% endblock %}
+
+{% block content %}
+<div style="max-width: 450px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+    <h1 style="margin-bottom: 8px; text-align: center;">Вход</h1>
+    <p style="color: #666; text-align: center; margin-bottom: 32px;">Войдите чтобы получить доступ к избранному</p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div style="padding: 12px; background: #fee2e2; color: #991b1b; border-radius: 8px; margin-bottom: 16px; font-size: 14px;">
+                {{ form.non_field_errors.0 }}
+            </div>
+        {% endif %}
+
+        <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">Логин</label>
+            {{ form.username }}
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">Пароль</label>
+            {{ form.password }}
+        </div>
+
+        <button type="submit"
+                style="width: 100%; padding: 14px; background: #2a5298; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px;">
+            Войти
+        </button>
+    </form>
+
+    <p style="text-align: center; color: #666; margin-top: 24px;">
+        Нет аккаунта?
+        <a href="{% url 'cars:register' %}" style="color: #2a5298; font-weight: 600; text-decoration: none;">Зарегистрироваться</a>
+    </p>
+</div>
+{% endblock %}

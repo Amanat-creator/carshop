@@ -1,0 +1,133 @@
+{% extends 'cars/base.html' %}
+
+{% block title %}{{ car.brand }} {{ car.model }} — АвтоКаталог{% endblock %}
+
+{% block content %}
+<a href="{% url 'cars:car_list' %}" style="color: #2a5298; text-decoration: none; margin-bottom: 20px; display: inline-block; font-weight: 600;">
+    ← Назад к каталогу
+</a>
+
+<div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 0;">
+
+        <!-- Левая часть: галерея -->
+        <div style="background: #f5f7fa;">
+            {% if car.images.all %}
+                <img id="mainImage" src="{{ car.images.first.image.url }}" alt="{{ car }}"
+                     style="width: 100%; max-height: 500px; object-fit: cover; display: block;">
+                <div style="display: flex; gap: 8px; padding: 12px; overflow-x: auto;">
+                    {% for img in car.images.all %}
+                        <img src="{{ img.image.url }}"
+                             onclick="document.getElementById('mainImage').src=this.src"
+                             style="width: 80px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s;"
+                             onmouseover="this.style.borderColor='#2a5298'"
+                             onmouseout="this.style.borderColor='transparent'">
+                    {% endfor %}
+                </div>
+            {% elif car.image %}
+                <img src="{{ car.image.url }}" alt="{{ car }}"
+                     style="width: 100%; max-height: 500px; object-fit: cover; display: block;">
+            {% else %}
+                <div style="width: 100%; height: 500px; background: linear-gradient(135deg, #e0e7ff, #c7d2fe); display: flex; align-items: center; justify-content: center; color: #6366f1; font-size: 120px;">
+                    🚗
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Правая часть: информация -->
+        <div style="padding: 40px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+                <div>
+                    <h1 style="font-size: 32px; margin-bottom: 8px;">{{ car.brand }} {{ car.model }}</h1>
+                    <div style="color: #666; margin-bottom: 8px;">{{ car.year }} год выпуска</div>
+                </div>
+                <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                    {% if is_favorite %}
+                        <a href="{% url 'cars:remove_favorite' car.pk %}" title="Убрать из избранного"
+                           style="display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; background: #fee2e2; border-radius: 50%; text-decoration: none; font-size: 20px;">❤️</a>
+                    {% else %}
+                        <a href="{% url 'cars:add_favorite' car.pk %}" title="В избранное"
+                           style="display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; background: #f5f7fa; border-radius: 50%; text-decoration: none; font-size: 20px;">🤍</a>
+                    {% endif %}
+
+                    {% if is_compare %}
+                        <a href="{% url 'cars:add_compare' car.pk %}" title="Убрать из сравнения"
+                           style="display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; background: #ffc107; border-radius: 50%; text-decoration: none; font-size: 18px;">⚖️</a>
+                    {% else %}
+                        <a href="{% url 'cars:add_compare' car.pk %}" title="В сравнение"
+                           style="display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; background: #f5f7fa; border-radius: 50%; text-decoration: none; font-size: 18px;">⚖️</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="font-size: 36px; font-weight: 700; color: #2a5298; margin: 24px 0;">
+                {{ car.price|floatformat:0 }} ₽
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                <div style="padding: 16px; background: #f5f7fa; border-radius: 8px;">
+                    <div style="color: #888; font-size: 12px; text-transform: uppercase; margin-bottom: 4px;">Пробег</div>
+                    <div style="font-weight: 600;">{{ car.mileage }} км</div>
+                </div>
+                <div style="padding: 16px; background: #f5f7fa; border-radius: 8px;">
+                    <div style="color: #888; font-size: 12px; text-transform: uppercase; margin-bottom: 4px;">КПП</div>
+                    <div style="font-weight: 600;">{{ car.get_transmission_display }}</div>
+                </div>
+                <div style="padding: 16px; background: #f5f7fa; border-radius: 8px;">
+                    <div style="color: #888; font-size: 12px; text-transform: uppercase; margin-bottom: 4px;">Топливо</div>
+                    <div style="font-weight: 600;">{{ car.get_fuel_display }}</div>
+                </div>
+                {% if car.engine_volume %}
+                <div style="padding: 16px; background: #f5f7fa; border-radius: 8px;">
+                    <div style="color: #888; font-size: 12px; text-transform: uppercase; margin-bottom: 4px;">Объём</div>
+                    <div style="font-weight: 600;">{{ car.engine_volume }} л</div>
+                </div>
+                {% endif %}
+                {% if car.color %}
+                <div style="padding: 16px; background: #f5f7fa; border-radius: 8px;">
+                    <div style="color: #888; font-size: 12px; text-transform: uppercase; margin-bottom: 4px;">Цвет</div>
+                    <div style="font-weight: 600;">{{ car.color }}</div>
+                </div>
+                {% endif %}
+                <div style="padding: 16px; background: #f5f7fa; border-radius: 8px;">
+                    <div style="color: #888; font-size: 12px; text-transform: uppercase; margin-bottom: 4px;">Просмотры</div>
+                    <div style="font-weight: 600;">{{ car.views_count }}</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <h3 style="margin-bottom: 8px;">Описание</h3>
+                <p style="color: #555; line-height: 1.6; white-space: pre-line;">{{ car.description }}</p>
+            </div>
+
+            <a href="{% url 'cars:contact_seller' car.slug %}"
+               style="display: block; text-align: center; padding: 16px; background: #2a5298; color: white; border-radius: 10px; font-size: 16px; font-weight: 600; text-decoration: none;">
+                Связаться с продавцом
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if similar_cars %}
+<h2 style="margin: 48px 0 24px;">Похожие автомобили</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+    {% for similar in similar_cars %}
+    <a href="{% url 'cars:car_detail' similar.slug %}"
+       style="text-decoration: none; color: inherit; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.2s;"
+       onmouseover="this.style.transform='translateY(-4px)'"
+       onmouseout="this.style.transform='translateY(0)'">
+        {% if similar.image %}
+            <img src="{{ similar.image.url }}" style="width: 100%; height: 160px; object-fit: cover;">
+        {% else %}
+            <div style="width: 100%; height: 160px; background: linear-gradient(135deg, #e0e7ff, #c7d2fe); display: flex; align-items: center; justify-content: center; font-size: 40px;">🚗</div>
+        {% endif %}
+        <div style="padding: 14px;">
+            <div style="font-weight: 600;">{{ similar.brand }} {{ similar.model }}</div>
+            <div style="color: #666; font-size: 13px; margin-top: 4px;">{{ similar.year }} г. • {{ similar.mileage }} км</div>
+            <div style="color: #2a5298; font-weight: 700; margin-top: 8px;">{{ similar.price|floatformat:0 }} ₽</div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

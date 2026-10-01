@@ -1,0 +1,338 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}АвтоКаталог{% endblock %}</title>
+
+    <script>
+        // Применяем тему ДО отрисовки — чтобы не было мигания
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+
+    <style>
+        /* ===== ПЕРЕМЕННЫЕ ТЕМЫ ===== */
+        :root {
+            --bg: #f5f7fa;
+            --bg-card: #ffffff;
+            --bg-secondary: #f5f7fa;
+            --bg-hover: #fafbfc;
+            --text: #1a1a1a;
+            --text-muted: #666;
+            --text-faint: #999;
+            --border: #e0e0e0;
+            --border-light: #eee;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+            --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-lg: 0 4px 20px rgba(0,0,0,0.08);
+            --header-bg: linear-gradient(135deg, #1e3c72, #2a5298);
+            --accent: #2a5298;
+            --accent-hover: #1e3c72;
+            --input-bg: #ffffff;
+            --input-border: #ddd;
+            --placeholder-bg: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            --placeholder-color: #6366f1;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --bg-secondary: #334155;
+            --bg-hover: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --text-faint: #64748b;
+            --border: #334155;
+            --border-light: #334155;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+            --shadow-md: 0 2px 8px rgba(0,0,0,0.4);
+            --shadow-lg: 0 4px 20px rgba(0,0,0,0.4);
+            --header-bg: linear-gradient(135deg, #0f172a, #1e293b);
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+            --input-bg: #334155;
+            --input-border: #475569;
+            --placeholder-bg: linear-gradient(135deg, #1e293b, #334155);
+            --placeholder-color: #64748b;
+        }
+
+        /* ===== ОБЩИЕ СТИЛИ ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        header {
+            background: var(--header-bg);
+            color: white;
+            padding: 16px 0;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: background 0.3s ease;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .logo { font-size: 24px; font-weight: 700; color: white; text-decoration: none; }
+        .logo span { color: #ffc107; }
+
+        nav { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+            font-size: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        nav a:hover { opacity: 1; }
+
+        .badge {
+            display: inline-block;
+            background: #ffc107;
+            color: #1e3c72;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-left: 4px;
+        }
+
+        /* Кнопка переключения темы */
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.2s, transform 0.2s;
+            padding: 0;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.25);
+            transform: scale(1.05);
+        }
+
+        main { padding: 30px 0; flex: 1; }
+
+        /* Сообщения */
+        .messages { margin-bottom: 20px; }
+
+        .message {
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.success { background: #d1fae5; color: #065f46; }
+        .message.info { background: #dbeafe; color: #1e40af; }
+        .message.warning { background: #fef3c7; color: #92400e; }
+        .message.error { background: #fee2e2; color: #991b1b; }
+
+        [data-theme="dark"] .message.success { background: #064e3b; color: #a7f3d0; }
+        [data-theme="dark"] .message.info { background: #1e3a8a; color: #bfdbfe; }
+        [data-theme="dark"] .message.warning { background: #78350f; color: #fde68a; }
+        [data-theme="dark"] .message.error { background: #7f1d1d; color: #fecaca; }
+
+        /* Подвал */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--text-faint);
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+            background: var(--bg-card);
+            transition: background-color 0.3s ease;
+        }
+
+        /* Универсальные утилиты для карточек */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            transition: background-color 0.3s ease, transform 0.2s, box-shadow 0.2s;
+        }
+
+        /* Инпуты и селекты */
+        input, select, textarea {
+            background: var(--input-bg);
+            color: var(--text);
+            border-color: var(--input-border) !important;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: var(--text-faint);
+        }
+
+        /* Убираем белый фон у инлайн-стилей */
+        [data-theme="dark"] a[style*="background: white"],
+        [data-theme="dark"] div[style*="background: white"],
+        [data-theme="dark"] form[style*="background: white"],
+        [data-theme="dark"] table[style*="background: white"] {
+            background: var(--bg-card) !important;
+            color: var(--text) !important;
+        }
+
+        [data-theme="dark"] [style*="background: #f5f7fa"],
+        [data-theme="dark"] [style*="background:#f5f7fa"] {
+            background: var(--bg-secondary) !important;
+        }
+
+        [data-theme="dark"] [style*="background: #fafbfc"],
+        [data-theme="dark"] [style*="background:#fafbfc"] {
+            background: var(--bg-hover) !important;
+        }
+
+        [data-theme="dark"] [style*="color: #666"] { color: var(--text-muted) !important; }
+        [data-theme="dark"] [style*="color:#666"] { color: var(--text-muted) !important; }
+        [data-theme="dark"] [style*="color: #999"] { color: var(--text-faint) !important; }
+        [data-theme="dark"] [style*="color:#999"] { color: var(--text-faint) !important; }
+        [data-theme="dark"] [style*="color: #888"] { color: var(--text-faint) !important; }
+        [data-theme="dark"] [style*="color:#888"] { color: var(--text-faint) !important; }
+        [data-theme="dark"] [style*="color: #555"] { color: var(--text-muted) !important; }
+        [data-theme="dark"] [style*="border-top: 1px solid #eee"] { border-top-color: var(--border) !important; }
+        [data-theme="dark"] [style*="border: 1px solid #ddd"] { border-color: var(--border) !important; }
+        [data-theme="dark"] [style*="border-bottom: 1px solid #eee"] { border-bottom-color: var(--border) !important; }
+        [data-theme="dark"] [style*="background: #f5f7fa"] { background: var(--bg-secondary) !important; }
+        [data-theme="dark"] [style*="background: #fafbfc"] { background: var(--bg-hover) !important; }
+        [data-theme="dark"] [style*="background: #e5e7eb"] { background: var(--bg-secondary) !important; color: var(--text) !important; }
+
+        /* Скроллбар в тёмной теме */
+        [data-theme="dark"] ::-webkit-scrollbar { width: 10px; height: 10px; }
+        [data-theme="dark"] ::-webkit-scrollbar-track { background: var(--bg); }
+        [data-theme="dark"] ::-webkit-scrollbar-thumb { background: #475569; border-radius: 5px; }
+        [data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="{% url 'cars:car_list' %}" class="logo">Авто<span>Каталог</span></a>
+            <nav>
+                <a href="{% url 'cars:car_list' %}">🚗 Каталог</a>
+                <a href="{% url 'cars:favorites' %}">
+                    ❤️ Избранное
+                    {% if user.is_authenticated %}
+                        {% with count=user.favorites.count %}
+                            {% if count %}<span class="badge">{{ count }}</span>{% endif %}
+                        {% endwith %}
+                    {% endif %}
+                </a>
+                <a href="{% url 'cars:compare' %}">
+                    ⚖️ Сравнение
+                    {% if user.is_authenticated %}
+                        {% with count=user.compares.count %}
+                            {% if count %}<span class="badge">{{ count }}</span>{% endif %}
+                        {% endwith %}
+                    {% endif %}
+                </a>
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'cars:profile' %}" style="background: rgba(255,255,255,0.15); padding: 8px 14px; border-radius: 20px;">
+                        👤 {{ user.username }}
+                    </a>
+                    <a href="{% url 'cars:logout' %}">Выйти</a>
+                {% else %}
+                    <a href="{% url 'cars:login' %}">Войти</a>
+                    <a href="{% url 'cars:register' %}" style="background: #ffc107; color: #1e3c72; padding: 8px 16px; border-radius: 20px; font-weight: 600;">
+                        Регистрация
+                    </a>
+                {% endif %}
+
+                {% if user.is_staff %}
+                    <a href="{% url 'cars:analytics' %}">📊</a>
+                    <a href="/admin/">⚙️</a>
+                {% endif %}
+
+                <!-- Кнопка переключения темы -->
+                <button id="themeToggle" class="theme-toggle" title="Переключить тему" aria-label="Переключить тему">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="message {{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            © 2025 АвтоКаталог. Все права защищены.
+        </div>
+    </footer>
+
+    <script>
+        (function() {
+            const toggle = document.getElementById('themeToggle');
+            const icon = document.getElementById('themeIcon');
+
+            function updateIcon(theme) {
+                icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+            }
+
+            // Устанавливаем иконку при загрузке
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            updateIcon(currentTheme);
+
+            toggle.addEventListener('click', function() {
+                const current = document.documentElement.getAttribute('data-theme') || 'light';
+                const next = current === 'dark' ? 'light' : 'dark';
+
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+                updateIcon(next);
+            });
+        })();
+    </script>
+</body>
+</html>

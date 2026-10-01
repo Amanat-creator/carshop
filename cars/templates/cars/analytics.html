@@ -1,0 +1,250 @@
+{% extends 'cars/base.html' %}
+
+{% block title %}Аналитика — АвтоКаталог{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 8px;">📊 Аналитика</h1>
+<p style="color: #666; margin-bottom: 24px;">Статистика по каталогу автомобилей</p>
+
+<!-- Верхние карточки со статистикой -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px;">
+    <div style="background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 20px; border-radius: 12px;">
+        <div style="opacity: 0.8; font-size: 13px;">Всего машин</div>
+        <div style="font-size: 32px; font-weight: 700; margin-top: 6px;">{{ total_cars }}</div>
+        <div style="opacity: 0.7; font-size: 12px; margin-top: 4px;">{{ available_cars }} в наличии</div>
+    </div>
+
+    <div style="background: linear-gradient(135deg, #059669, #10b981); color: white; padding: 20px; border-radius: 12px;">
+        <div style="opacity: 0.8; font-size: 13px;">Общая стоимость</div>
+        <div style="font-size: 24px; font-weight: 700; margin-top: 6px;">{{ total_value|floatformat:0 }} ₽</div>
+        <div style="opacity: 0.7; font-size: 12px; margin-top: 4px;">всего в каталоге</div>
+    </div>
+
+    <div style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; padding: 20px; border-radius: 12px;">
+        <div style="opacity: 0.8; font-size: 13px;">Средняя цена</div>
+        <div style="font-size: 24px; font-weight: 700; margin-top: 6px;">{{ avg_price|floatformat:0 }} ₽</div>
+        <div style="opacity: 0.7; font-size: 12px; margin-top: 4px;">мин: {{ min_price|floatformat:0 }} ₽</div>
+    </div>
+
+    <div style="background: linear-gradient(135deg, #7c3aed, #a78bfa); color: white; padding: 20px; border-radius: 12px;">
+        <div style="opacity: 0.8; font-size: 13px;">Просмотры</div>
+        <div style="font-size: 32px; font-weight: 700; margin-top: 6px;">{{ total_views }}</div>
+        <div style="opacity: 0.7; font-size: 12px; margin-top: 4px;">за всё время</div>
+    </div>
+
+    <div style="background: linear-gradient(135deg, #e11d48, #f43f5e); color: white; padding: 20px; border-radius: 12px;">
+        <div style="opacity: 0.8; font-size: 13px;">Пользователи</div>
+        <div style="font-size: 32px; font-weight: 700; margin-top: 6px;">{{ total_users }}</div>
+        <div style="opacity: 0.7; font-size: 12px; margin-top: 4px;">❤️ {{ total_favorites }} ⚖️ {{ total_compares }}</div>
+    </div>
+</div>
+
+<!-- Графики -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+
+    <!-- Средняя цена по маркам -->
+    <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <h3 style="margin-bottom: 16px;">💰 Средняя цена по маркам (топ-10)</h3>
+        <canvas id="chartBrandPrice" height="200"></canvas>
+    </div>
+
+    <!-- Количество машин по маркам -->
+    <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <h3 style="margin-bottom: 16px;">🚗 Количество машин по маркам</h3>
+        <canvas id="chartBrandCount" height="200"></canvas>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+
+    <!-- Распределение цен -->
+    <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <h3 style="margin-bottom: 16px;">💵 Распределение цен</h3>
+        <canvas id="chartPriceDist" height="200"></canvas>
+    </div>
+
+    <!-- КПП -->
+    <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <h3 style="margin-bottom: 16px;">⚙️ Распределение по КПП</h3>
+        <canvas id="chartTransmission" height="200"></canvas>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+
+    <!-- Топленное -->
+    <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <h3 style="margin-bottom: 16px;">⛽ Распределение по топливу</h3>
+        <canvas id="chartFuel" height="200"></canvas>
+    </div>
+
+    <!-- Топ просмотров -->
+    <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <h3 style="margin-bottom: 16px;">👁 Топ-5 по просмотрам</h3>
+        <canvas id="chartTopViewed" height="200"></canvas>
+    </div>
+</div>
+
+<!-- Динамика добавления -->
+<div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-top: 24px;">
+    <h3 style="margin-bottom: 16px;">📅 Динамика добавления машин (за год)</h3>
+    <canvas id="chartMonthly" height="80"></canvas>
+</div>
+
+<!-- Подключаем Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+// Общие настройки
+Chart.defaults.font.family = "-apple-system, 'Segoe UI', Roboto, sans-serif";
+Chart.defaults.color = '#666';
+
+const COLORS = ['#2a5298', '#10b981', '#f59e0b', '#a78bfa', '#f43f5e', '#06b6d4', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+
+// 1. Средняя цена по маркам
+new Chart(document.getElementById('chartBrandPrice'), {
+    type: 'bar',
+    data: {
+        labels: {{ brand_labels|safe }},
+        datasets: [{
+            label: 'Средняя цена, ₽',
+            data: {{ brand_avg_prices|safe }},
+            backgroundColor: '#2a5298',
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: (ctx) => new Intl.NumberFormat('ru-RU').format(ctx.raw) + ' ₽'
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: (v) => (v / 1000000).toFixed(1) + 'M'
+                }
+            }
+        }
+    }
+});
+
+// 2. Количество машин по маркам
+new Chart(document.getElementById('chartBrandCount'), {
+    type: 'bar',
+    data: {
+        labels: {{ brand_labels|safe }},
+        datasets: [{
+            label: 'Машин',
+            data: {{ brand_counts|safe }},
+            backgroundColor: '#10b981',
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+// 3. Распределение цен
+new Chart(document.getElementById('chartPriceDist'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ price_labels|safe }},
+        datasets: [{
+            data: {{ price_distribution|safe }},
+            backgroundColor: COLORS,
+            borderWidth: 0,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// 4. КПП
+new Chart(document.getElementById('chartTransmission'), {
+    type: 'pie',
+    data: {
+        labels: {{ trans_labels|safe }},
+        datasets: [{
+            data: {{ trans_counts|safe }},
+            backgroundColor: COLORS,
+            borderWidth: 0,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// 5. Топливо
+new Chart(document.getElementById('chartFuel'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ fuel_labels|safe }},
+        datasets: [{
+            data: {{ fuel_counts|safe }},
+            backgroundColor: ['#f59e0b', '#1e3c72', '#10b981', '#06b6d4'],
+            borderWidth: 0,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// 6. Топ просмотров
+new Chart(document.getElementById('chartTopViewed'), {
+    type: 'bar',
+    data: {
+        labels: {{ top_viewed_labels|safe }},
+        datasets: [{
+            label: 'Просмотры',
+            data: {{ top_viewed_counts|safe }},
+            backgroundColor: '#a78bfa',
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true } }
+    }
+});
+
+// 7. Динамика добавления
+new Chart(document.getElementById('chartMonthly'), {
+    type: 'line',
+    data: {
+        labels: {{ month_labels|safe }},
+        datasets: [{
+            label: 'Добавлено машин',
+            data: {{ month_counts|safe }},
+            borderColor: '#2a5298',
+            backgroundColor: 'rgba(42, 82, 152, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 5,
+            pointBackgroundColor: '#2a5298',
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+});
+</script>
+{% endblock %}

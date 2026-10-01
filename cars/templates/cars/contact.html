@@ -1,0 +1,44 @@
+{% extends 'cars/base.html' %}
+
+{% block title %}Связаться с продавцом — АвтоКаталог{% endblock %}
+
+{% block content %}
+<a href="{% url 'cars:car_detail' car.slug %}" style="color: #2a5298; text-decoration: none; margin-bottom: 20px; display: inline-block; font-weight: 600;">
+    ← Назад к автомобилю
+</a>
+
+<div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+    <h1 style="margin-bottom: 8px;">Связаться с продавцом</h1>
+    <p style="color: #666; margin-bottom: 24px;">
+        {{ car.brand }} {{ car.model }} —
+        <span style="color: #2a5298; font-weight: 700;">{{ car.price|floatformat:0 }} ₽</span>
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% for field in form %}
+            <div style="margin-bottom: 18px;">
+                <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.errors %}
+                    <div style="color: #e11d48; font-size: 13px; margin-top: 4px;">
+                        {{ field.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button type="submit"
+                style="width: 100%; padding: 14px; background: #2a5298; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
+            Отправить заявку
+        </button>
+    </form>
+
+    <p style="color: #999; font-size: 13px; margin-top: 16px; text-align: center;">
+        Нажимая кнопку, вы соглашаетесь на обработку персональных данных
+    </p>
+</div>
+{% endblock %}
